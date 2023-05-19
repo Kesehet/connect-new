@@ -85,7 +85,7 @@ try {
                             <form name='searchform'  action="<?php 
                             if(isset($u)){
                                 if($u["role"] == "admin" ){
-                                    echo "#";//route('leave.search');
+                                    echo "#";
                                 }
                                 else{
                                     echo "#";
@@ -255,6 +255,19 @@ try {
                                                     foreach ($list as $leave) {
                                                         if (isset($leave[$key]) && stripos($leave[$key], $query) !== false) {
                                                             array_push($result,$leave);
+                                                        }
+                                                    }
+                                                    return $result;
+                                                }
+                                                function searchByKeyQueryInt($list, $key, $query) {
+                                                    $result = array();
+                                                    if(intval($query) < 0){
+                                                        return $list;
+                                                    }
+                                                    
+                                                    foreach ($list as $leave) {
+                                                        if (isset($leave[$key]) && $leave[$key] === $query) {
+                                                            array_push($result, $leave);
                                                         }
                                                     }
                                                     return $result;
@@ -581,14 +594,6 @@ try {
                                                     return $conn;
                                                 }
                                                 
-
-
-                                                //_________________________________________________________________________
-                                                /*
-                                                    
-                                                    NOTE: The employee login lacks user role identifier only on the search page.
-                                                */
-
                                                 $open= '<div class="col-sm-3" UniqueStr ><select type="text" name="userid" class="form-control" id="userid" placeholder="Select User"  ><option value="">Show All</option>';
                                                 $mid="";
                                                 $close='</select></div>';
@@ -614,8 +619,7 @@ try {
                                                             }                               
                                                         }
                                                         elseif($u['role']=='manager') {
-                                                            // Manager Logic
-                                                            // Collect the leaves for users under this manager
+                                                            
                                                             
                                                             
                                                             $usersUnderManager = getUsersUnderManager(intval($u["id"]),fetch_users()); 
@@ -649,14 +653,14 @@ try {
                                                 
                                                 
                                                 ?>
-                                        <!--<label for="fromDate">From: </label>-->
+                                        
                                         <div class="col-sm-3">
                                         
                                             <!--input type="date" name="createddate" class="form-control" id="createddate" placeholder="Date filter" value="{{ Request::get('createddate') }}"commented by Madhuri-->
                                             <input type="date" min="{{date('Y-m-d'),strtotime("2013-01-19 01:23:42")}}" name="date_from" class="form-control" id="FromDate">
                                             
                                         </div>
-                                        <!--<label for="ToDate">To: </label>-->
+                                        
                                         <div class="col-sm-3">
                                             <!--input type="date" name="createddate" class="form-control" id="createddate" placeholder="Date filter" value="{{ Request::get('createddate') }}"commented by Madhuri-->
                                             
@@ -669,7 +673,17 @@ try {
                                                 document.getElementById("ToDate").value = "<?php echo getValueOrDefault("date_to"); ?>";
                                                 document.getElementById("FromDate").value = "<?php echo getValueOrDefault("date_from"); ?>";
                                                 </script>
-                                        </div>                                       
+                                        </div>  
+                                        <div class="col-sm-3">
+                                            
+                                            <select name="status" class="form-control">
+                                                <option value="-1">All</option>
+                                                <option value="0">Pending</option>
+                                                <option value="1">Approved</option>
+                                                <option value="2">Rejected</option>
+                                                <option value="3">Canceled</option>
+                                            </select>
+                                        </div>                                     
                                     </div>
                                 </div>
                                 <div class="border-top">
@@ -738,11 +752,12 @@ return $modified_url;
                                     
                                     ?>
                                         
-                                        <a href="<?php echo getDateRangeUrl('today'); ?>" class="btn btn-md btn-success">Today</a>
-<a href="<?php echo getDateRangeUrl('this week'); ?>" class="btn btn-md btn-success">This Week</a>
-<a href="<?php echo getDateRangeUrl('next week'); ?>" class="btn btn-md btn-success">Next Week</a>
-<a href="<?php echo getDateRangeUrl('this month'); ?>" class="btn btn-md btn-success">This Month</a>
-<a href="<?php echo getDateRangeUrl('next month'); ?>" class="btn btn-md btn-success">Next Month</a>
+                                        <a href="<?php echo getDateRangeUrl('today') . '&status=' . getValueOrDefault("status"); ?>" class="btn btn-md btn-success">Today</a>
+<a href="<?php echo getDateRangeUrl('this week') . '&status=' . getValueOrDefault("status"); ?>" class="btn btn-md btn-success">This Week</a>
+<a href="<?php echo getDateRangeUrl('next week') . '&status=' . getValueOrDefault("status"); ?>" class="btn btn-md btn-success">Next Week</a>
+<a href="<?php echo getDateRangeUrl('this month') . '&status=' . getValueOrDefault("status"); ?>" class="btn btn-md btn-success">This Month</a>
+<a href="<?php echo getDateRangeUrl('next month') . '&status=' . getValueOrDefault("status"); ?>" class="btn btn-md btn-success">Next Month</a>
+
 <button type="submit" class="btn btn-success">Search</button>
                                         <a href="{{route('leave')}}" class="btn btn-md btn-danger">Clear</a>
 
@@ -935,7 +950,9 @@ if($u["role"] == "admin" ){
                                                 $leavesList = searchByKeyQuery($leavesList,"leave_type",(getValueOrDefault("leavetype")=="all"?"":getValueOrDefault("leavetype")));
                                                 
                                                 $leavesList = searchByDateRange($leavesList, "date_from", "date_to", getValueOrDefault("date_from"), getValueOrDefault("date_to"));
+                                                $status = getValueOrDefault("status");
                                                 
+                                                $leavesList = searchByKeyQueryInt($leavesList,"is_approved",strval($status));
                                                 
                                                 
                                                 
@@ -954,7 +971,7 @@ if($u["role"] == "admin" ){
                                                     
                                                     if($u["role"] == "manager"){
                                                         //echo json_encode(userFromUserListById($leaveNow["employee_id"],fetch_users()));
-                                                        //exit(); 
+                                                        
                                                         $employeeName = userFromUserListById($leaveNow["employee_id"],fetch_users())["full_name"];
                                                         
                                                     }
@@ -998,7 +1015,7 @@ if($u["role"] == "admin" ){
                                                                             $leaveNow
                                                                         ).
                                                                         getDeff(
-                                                                            isApprovedSpan($leaveNow["is_approved"]),
+                                                                            $leaveNow["is_approved"].isApprovedSpan($leaveNow["is_approved"]),
                                                                             $leaveNow
                                                                         ).
                                                                         getDeff(

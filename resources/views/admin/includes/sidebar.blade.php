@@ -21,50 +21,6 @@
                     </ul>
                 </li> 
                 @endcanany
-              
-                <?php 
-                /* @can('isAdmin')
-                {{--<li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="{{route('employee')}}" aria-expanded="false"><i class="mdi mdi-border-inside"></i><span class="hide-menu">Employee Management</span></a></li>--}}
-                @endcan */
-                /*
-                @can('isAdmin')
-                <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-receipt"></i><span class="hide-menu">System Management</span></a>
-                    <ul aria-expanded="false" class="collapse  first-level">
-                        <li class="sidebar-item"><a href="{{route('designation')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Designation </span></a></li>
-                        <li class="sidebar-item"><a href="{{route('department')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Department </span></a></li>
-                        <li class="sidebar-item"><a href="{{route('salary')}}" class="sidebar-link"><i class="mdi mdi-note-plus"></i><span class="hide-menu"> Salary </span></a></li>
-                        {{--<li class="sidebar-item"><a href="{{route('city')}}" class="sidebar-link"><i class="mdi mdi-note-plus"></i><span class="hide-menu"> City </span></a></li>--}}
-                        {{--<li class="sidebar-item"><a href="{{route('shift')}}" class="sidebar-link"><i class="mdi mdi-note-plus"></i><span class="hide-menu"> Shift </span></a></li>--}}
-                    </ul>
-                </li>
-                @endcan
-                 */ 
-                
-                /*
-                @can('isAdmin')
-                <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-receipt"></i><span class="hide-menu">Payroll Management</span></a>
-                    <ul aria-expanded="false" class="collapse  first-level">
-                        {{--<li class="sidebar-item"><a href="{{route('managesalary')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Manage salary details </span></a></li>--}}
-                        <li class="sidebar-item"><a href="{{route('managesalary.salarylist')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Employee salary list</span></a></li>
-                        {{--<li class="sidebar-item"><a href="{{route('payroll.list')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Employee salary list </span></a></li>--}}
-                        {{--<li class="sidebar-item"><a href="{{route('payroll.payment')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Make payment </span></a></li>--}}
-                        {{--<li class="sidebar-item"><a href="{{route('payroll.payslip')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu"> Generate payslip </span></a></li>--}}
-                    </ul>
-                </li>
-                @endcan
-
-                {{--<li class="sidebar-item"><a href="{{route('event')}}" class="sidebar-link"><i class="mdi mdi-calendar-check"></i><span class="hide-menu"> Calendar </span></a></li>--}}
-                <li class="sidebar-item"><a href="{{route('calendar')}}" class="sidebar-link"><i class="mdi mdi-calendar-check"></i><span class="hide-menu"> Calendar </span></a></li>
-
-
-                {{--<li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link" href="{{route('download')}}" aria-expanded="false"><i class="mdi mdi-border-inside"></i><span class="hide-menu">Downloads</span></a></li>--}}
-                 */ 
-                
-                /* @can('isEmployee')
-                        <li class="sidebar-item"><a href="{{route('appraisal.createfun')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu">Functional Appraisal</span></a></li>
-                        @endcan */
-                
-                ?>
                 
                 <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-receipt"></i><span class="hide-menu">Leaves</span></a>
                     <ul aria-expanded="false" class="collapse  first-level">
@@ -76,6 +32,16 @@
                     </ul>
                 </li>
                 
+                <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-receipt"></i><span class="hide-menu">Tasks</span></a>
+                    <ul aria-expanded="false" class="collapse  first-level">
+                    @canany(['isAdmin', 'isManager']) 
+                        <li class="sidebar-item"><a href="{{route('tasks.create')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu">Add Tasks</span></a></li>
+                    @endcanany
+                        <li class="sidebar-item"><a href="{{route('tasks.index')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu">Tasks List</span></a></li>
+                    </ul>
+                </li>
+
+
                 <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><i class="mdi mdi-receipt"></i><span class="hide-menu">Timesheets</span></a>
                     <ul aria-expanded="false" class="collapse  first-level">
                         <li class="sidebar-item"><a href="{{route('timesheet.create')}}" class="sidebar-link"><i class="mdi mdi-note-outline"></i><span class="hide-menu">Add Timesheet</span></a></li>

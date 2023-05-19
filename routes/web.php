@@ -30,6 +30,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TaskController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -155,13 +156,14 @@ Route::group(['middleware' => 'auth'], function (){
 	Route::get('leave/delete/{id}', [LeaveController::class, 'delete'])->name('leave.delete');
 	Route::post('leave/approve/{id}', [LeaveController::class, 'approve'])->name('leave.approve');
 	Route::post('leave/paid/{id}', [LeaveController::class, 'paid'])->name('leave.paid');
-//    Route::post('leave/pending/{id}',        [ 'as'=>'leave.pending',        'uses' => 'LeaveController@pending']);
-//    Route::post('leave/reject/{id}',        [ 'as'=>'leave.reject',        'uses' => 'LeaveController@reject']);
-    
         
     Route::get('timesheet', [TimesheetController::class, 'index'])->name('timesheet');
 	Route::get('timesheet/search', [TimesheetController::class, 'search'])->name('timesheet.search');
 	Route::get('timesheet/create', [TimesheetController::class, 'create'])->name('timesheet.create');
+	
+	Route::get('timesheet/{timesheet}/edit', [TimesheetController::class, 'edit'])->name('timesheet.edit');
+	Route::put('timesheet/update/{timesheet}',[TimesheetController::class, 'update'])->name('timesheet.update');
+	
 	Route::post('timesheet/store', [TimesheetController::class, 'store'])->name('timesheet.store');
 	Route::get('timesheet/delete/{id}', [TimesheetController::class, 'delete'])->name('timesheet.delete');
 	Route::get('timesheet/ajaxindex/{id}', [TimesheetController::class, 'ajaxindex'])->name('timesheet.ajaxindex');
@@ -216,7 +218,18 @@ Route::group(['middleware' => 'auth'], function (){
     
 
 	Route::resource('tasks', 'TaskController');
+	Route::get("tasks",[TaskController::class,"index"])->name("tasks.index");
+	Route::get("tasks/edit/{task}",[TaskController::class,"edit"])->name("tasks.edit");
+	Route::delete("tasks/destroy/{task}",[TaskController::class,"destroy"])->name("tasks.destroy");
+	Route::post("tasks/update/{task}",[TaskController::class,"update"])->name("tasks.update");
+	Route::get("tasks/create",[TaskController::class,"create"])->name("tasks.create");
+	Route::post("tasks/store",[TaskController::class,"store"])->name("tasks.store");
 
+	Route::post('tasks/{task}/subtasks', 'TaskController@createSubtask')->name('tasks.subtasks.create');
+	Route::post('tasks/{task}/subtasks/{subtask}', 'TaskController@updateSubtask')->name('tasks.subtasks.update');
+	Route::delete('tasks/{task}/subtasks/{subtask}', 'TaskController@deleteSubtask')->name('tasks.subtasks.delete');
+	
+	Route::post('/subtasks/{subtask}/status', 'TaskController@updateSubtaskStatus')->name('subtasks.updateStatus');
 
 
 });

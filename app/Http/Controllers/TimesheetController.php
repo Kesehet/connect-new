@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TimesheetRequest;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Leave;
 
 class TimesheetController extends Controller {
 
@@ -179,51 +180,81 @@ class TimesheetController extends Controller {
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Timesheet  $leave
+     * @param  \App\Timesheet  $timesheet
      * @return \Illuminate\Http\Response
      */
-    public function edit(Timesheet $leave) {
-        //
+    public function edit(Timesheet $timesheet)
+    {
+        // Get the authenticated user
+        $user = Auth::user();
+        
+
+        // Check if the user is authorized to edit the timesheet
+        if (Gate::allows('isAdmin') || ($user->id == $timesheet->user_id && $user->role == 'employee')) {
+            
+            $timesheet->timesheetdetails = Timesheetdetail::where('timesheet_id', $timesheet->id)->get();
+            
+            return view('admin.timesheet.edit', compact('timesheet'));
+        } else {
+            // User is not authorized to edit the timesheet
+            abort(403, 'Unauthorized');
+        }
     }
 
-        /**
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Timesheet  $timesheet
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Timesheet $timesheet) {
-        // Validate the request data
-        $request->validate([
-            'timesheet_date' => 'required|date',
-            'comments.*' => 'required|string',
-            'hours.*' => 'required|integer|min:0',
-            'mintus.*' => 'required|integer|min:0|max:59',
-        ]);
-
-        // Update the timesheet date
-        $timesheet->timesheet_date = $request->timesheet_date;
-        $timesheet->save();
-
-        // Delete the existing timesheet details
-        Timesheetdetail::where('timesheet_id', $timesheet->id)->delete();
-
-        // Add the updated timesheet details
-        for ($i = 0; $i < count($request->comments); $i++) {
-            if ($request->comments[$i] != "" && ($request->hours[$i] > 0 || $request->mintus[$i] > 0)) {
-                $total_min = ($request->hours[$i] * 60) + $request->mintus[$i];
-                Timesheetdetail::create([
-                    'timesheet_id' => $timesheet->id,
-                    'working_mintus' => $total_min,
-                    'comments' => $request->comments[$i],
-                ]);
+    public function update(Request $request, Timesheet $timesheet)
+    {
+        // Get the authenticated user
+        $user = Auth::user();
+    
+        // Check if the user is authorized to update the timesheet
+        if (Gate::allows('isAdmin') || ($user->id == $timesheet->user_id && $user->role == 'employee')) {
+            // Validate the request data
+            $request->validate([
+                'timesheet_date' => 'required|date',
+                'comments.*' => 'required|string',
+                'hours.*' => 'required|integer|min:0',
+                'mintus.*' => 'required|integer|min:0|max:59',
+            ]);
+    
+            // Update the timesheet date
+            $timesheet->timesheet_date = $request->timesheet_date;
+            $timesheet->save();
+    
+            // Delete the existing timesheet details
+            Timesheetdetail::where('timesheet_id', $timesheet->id)->delete();
+    
+            // Add the updated timesheet details
+            if (!empty($request->comments) && !empty($request->hours) && !empty($request->mintus)) {
+                
+                for ($i = 0; $i < count($request->comments); $i++) {
+                    if ($request->comments[$i] != "" && ($request->hours[$i] > 0 || $request->mintus[$i] > 0)) {
+                        $total_min = ($request->hours[$i] * 60) + $request->mintus[$i];
+                        
+                        Timesheetdetail::create([
+                            'timesheet_id' => $timesheet->id,
+                            'working_mintus' => $total_min,
+                            'comments' => $request->comments[$i],
+                        ]);
+                    }
+                }
             }
+            
+            Toastr::success('Timesheet successfully updated!', 'Success');
+            return redirect()->route('timesheet');
+        } else {
+            // User is not authorized to update the timesheet
+            abort(403, 'Unauthorized');
         }
-
-        Toastr::success('Timesheet successfully updated!', 'Success');
-        return redirect()->route('timesheet');
     }
+    
+    
 
 
     /**

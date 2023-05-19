@@ -417,7 +417,6 @@ function dateRangeTable($start_date, $end_date, $jump=7) {
             // Check if the loop_date is the same as the current_date
             if ($loop_date->format('Y-m-d') == $current_date->format('Y-m-d')) {
             $buttons = '<a class="btn btn-danger" href="' . route('timesheet.create') . '">Add Timesheet</a>
-                        <a class="btn btn-dark" href="'  . '">Edit</a>
                         ';
 
             // Search timesheets for the current user and date (replace searchByKeyQuery() with your own function)
@@ -437,7 +436,9 @@ function dateRangeTable($start_date, $end_date, $jump=7) {
                         // Generate buttons and display total work hours for each timesheet
                         for($ctr = 0; $ctr < count($times); $ctr++) {
                             $id = $times[$ctr]["id"];
-                            $buttons .= '<p style="text-align:left;"><b>Today\'s work hours total:</b> ' . minutes_to_hours($totalMintu) . '</p>' . '<p style="text-align:center;">' . returnMButtons($id) . '</p>';
+                            $buttons .= '<p style="text-align:left;"><b>Today\'s work hours total:</b> ' . minutes_to_hours($totalMintu) . '</p>' . '<p style="text-align:center;">' . returnMButtons($id) . '</p>
+                                        <a class="btn btn-dark" href="' .route('timesheet.edit',$id) . '">'.'Edit</a>
+                            ';
                         }
             
                         // If no timesheets are found, check for approved leaves on the current date
