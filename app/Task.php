@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Subtask;
 class Task extends Model
 {
     /**
@@ -22,7 +22,9 @@ class Task extends Model
         'name',
         'description',
         'status',
-        'user_id'
+        'user_id',
+        "assigned_to",
+        "created_by"
     ];
 
     /**
@@ -35,5 +37,15 @@ class Task extends Model
     public function subtasks()
     {
         return $this->hasMany(Subtask::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }

@@ -3,108 +3,155 @@
 namespace App\Http\Controllers;
 
 use App\Task;
-use Illuminate\Http\Request;
-use Brian2694\Toastr\Facades\Toastr;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controller\User;
-use Illuminate\Support\Facades\DB;
 use App\Models\Subtask;
-use Illuminate\Http\Response;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends Controller
 {
-    public function __construct() {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
+    /**
+     * Retrieves tasks and user list based on user's role.
+     *
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function index()
     {
         $userId = Auth::user()->id;
         $userRole = $this->getUserRole($userId);
-        
-        if ($userRole == 'admin') {
+        $userList = $this->getUserListForEmployee();
+        if ($userRole === 'admin') {
             $tasks = $this->getTasksForAdmin();
-            $userlist = $this->getUserListForAdmin();
-        } elseif ($userRole == 'manager') {
-            $UserIds = $this->getManagerUserIds($userId);
-            $tasks = $this->getTasksForManager($UserIds);
-            $userlist = $this->getUserListForManager($UserIds);
+            $userList = $this->getUserListForAdmin();
+        } elseif ($userRole === 'manager') {
+            $userIds = $this->getManagerUserIds($userId,$managerName = Auth::user()->name);
+            $tasks = $this->getTasksForManager($userIds);
+            $userList = $this->getUserListForManager($userIds);
         } else {
-            $userlist = [];
             $tasks = $this->getUserTasks($userId);
         }
-    
+
         $tasksWithSubtasks = [];
         foreach ($tasks as $task) {
             $task->subtasks = $this->getSubtasksForTask($task->id);
+
+            // Filter subtasks based on user role
+            if ($userRole == 'employee') {
+                $task->subtasks = $task->subtasks->where('assigned_to', $userId);
+            }
+
             $tasksWithSubtasks[] = $task;
         }
-        
-        $tasks = $tasksWithSubtasks;
-        return view('admin.tasks.index', compact('tasks', 'userlist'));
-    }
-    
 
+        $tasks = $tasksWithSubtasks;
+        return view('admin.tasks.index', compact('tasks', 'userList'));
+    }
+    public function getUserListForEmployee(){
+        
+        return $this->getUserListForAdmin();
+    }
+    /**
+     * Retrieves the role of a user given their user ID.
+     *
+     * @param int $userId the ID of the user whose role to retrieve.
+     * @return string the role of the user.
+     */
     private function getUserRole($userId)
     {
-        $userRole = DB::table('users')->where('id', $userId)->value('role');
+        $userRole = User::where('id', $userId)->value('role');
         return $userRole;
     }
-    
+
     private function getTasksForAdmin()
     {
-        $tasks = DB::table('tasks')->orderBy('created_at', 'DESC')->paginate(20);
+        $tasks = Task::orderBy('created_at', 'DESC')->paginate(20);
         return $tasks;
     }
 
     private function getUserListForAdmin()
     {
-        $userlist = DB::table('users')->pluck(DB::raw("CONCAT(first_name, ' ', last_name) AS username"), 'id');
-        return $userlist;
+        $userList = User::query()
+            ->selectRaw("CONCAT(first_name, ' ', last_name) AS username, id")
+            ->pluck('username', 'id');
+
+        return $userList;
     }
 
-    private function getManagerUserIds($userId)
+
+    private function getManagerUserIds($userId, $managerName)
     {
-        $UserIds = DB::table('users')->where('manager', 'your_manager_name')->pluck('id');
-        $UserIds[] = $userId;
-        return $UserIds;
+        $managerName = 'your_manager_name';
+        $userIds = User::where('manager', $managerName)->pluck('id')->toArray();
+        $userIds[] = $userId;
+        return $userIds;
     }
 
     private function getTasksForManager($userIds)
     {
-        $tasks = DB::table('tasks')->whereIn('user_id', $userIds)->orderBy('created_at', 'DESC')->paginate(20);
+        $tasks = Task::whereIn('user_id', $userIds)->orderBy('created_at', 'DESC')->paginate(20);
         return $tasks;
     }
 
     private function getUserListForManager($userIds)
     {
-        $userlist = DB::table('users')
-            ->whereIn('id', $userIds)
+        $userList = User::whereIn('id', $userIds)
             ->pluck(DB::raw("CONCAT(first_name, ' ', last_name) AS username"), 'id');
-        return $userlist;
+        return $userList;
     }
 
     private function getUserTasks($userId)
     {
-        $tasks = DB::table('tasks')->where('user_id', $userId)->orderBy('created_at', 'DESC')->paginate(20);
-        return $tasks;
+        
+        $returnList = [];
+        $tasks= Task::orderBy('created_at', 'DESC')->get();
+        for ($i=0; $i < count($tasks); $i++) { 
+            $subtask = $tasks[$i]->subtasks;
+            
+            $toTest =  $subtask->where('assigned_to', $userId)->where("status","!=","Approved");
+            if(count($toTest) > 0 && $toTest != null){
+                array_push($returnList, $tasks[$i]);
+            }
+        }
+        return $returnList;
     }
+
     private function getSubtasksForTask($taskId)
     {
-        $subtasks = DB::table('subtasks')->where('task_id', $taskId)->get();
+        $subtasks = Subtask::where('task_id', $taskId)->get();
         return $subtasks;
     }
 
     public function create()
     {
-        if (Auth::user()->role == 'employee' ) {
-            Toastr::error('You are not authorized to create tasks!', 'Unauthorized');
-            return redirect()->route('admin.tasks.index');
+        if (Auth::user()->role === 'employee') {
+            return redirect()->route('admin.tasks.index')->withErrors('You are not authorized to create tasks!');
         }
-        
-        return view('admin.tasks.create');
-    }
 
+        $userList = [];
+        if (Auth::user()->role === 'admin') {
+            $userList = $this->getUserListForAdmin();
+        } elseif (Auth::user()->role === 'manager') {
+            $userId = Auth::user()->id;
+            $userIds = $this->getManagerUserIds($userId,Auth::user()->name);
+            $userList = $this->getUserListForManager($userIds);
+        }
+
+        return view('admin.tasks.create', compact('userList'));
+    }
+    /**
+     * Store a newly created task in storage.
+     *
+     * @param Request $request The HTTP request instance.
+     * @throws Some_Exception_Class If something goes wrong.
+     * @return Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -112,69 +159,54 @@ class TaskController extends Controller
             'description' => 'required',
         ]);
 
-    
-        $user_id = Auth::user()->id;
-        
+        $userId = Auth::user()->id;
+        $createdBy = Auth::user()->role === 'admin' ? $userId : null;
 
-        $task = new Task([
+        $task = Task::create([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
-            'user_id' => $user_id,
+            'user_id' => $userId,
+            'created_by' => $createdBy,
         ]);
-        $task->save();
-        
-        
-        foreach ($request->input("subtask_name") as $tasker){
-            $taskNow = new Subtask([
-                'name' => $tasker,
-                'description' => $tasker,
+
+        foreach ($request->input('subtask_name', []) as $index => $subtaskName) {
+            $assignedTo = intval($request->input('subtask_assigned_to.' . $index));
+
+            Subtask::create([
+                'name' => $subtaskName,
+                'description' => $subtaskName,
                 'status' => 'To Do',
                 'user_id' => Auth::id(),
                 'task_id' => $task->id,
+                'created_by' => Auth::id(),
+                'assigned_to' => $assignedTo,
             ]);
-            $taskNow->save();
         }
-    
-        Toastr::success('Task created successfully!', 'Success');
-        return redirect()->route('tasks.index');
-    }
-    
 
-    public function show(Task $task)
-    {
-        return view('admin.tasks.show', compact('task'));
-    }
-
-    public function edit(Task $task)
-    {
-        
-        
-            $task->subtasks = $this->getSubtasksForTask($task->id);
-        
-        
-         
-        return view('admin.tasks.edit', compact('task'));
+        return redirect()->route('tasks.index')->with('success', 'Task created successfully!');
     }
 
     public function update(Request $request, Task $task)
 {
+    // Validate subtasks which will be an array of subtask names and descriptions along with their statuses
     $request->validate([
         'name' => 'required',
         'description' => 'required',
+        'subtask_name' => 'required',
+        'subtask_assigned_to' => 'required',
+        "subtask_description" => "required",
     ]);
 
     $userRole = Auth::user()->role;
 
-    // Check if user is admin or manager
-    if ($userRole === 'admin' || $userRole === 'manager') {
+    
         $task->update([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
         ]);
-    }
+    
 
-    // Update subtasks for the user
-    if ($userRole === 'employee') {
+    
         $subtasks = $request->input('subtask_name', []);
         $existingSubtasks = $task->subtasks->pluck('id')->toArray();
 
@@ -183,22 +215,30 @@ class TaskController extends Controller
         Subtask::whereIn('id', $subtasksToDelete)->delete();
 
         // Update or create subtasks
-        foreach ($subtasks as $index => $subtask) {
+        foreach ($subtasks as $index => $subtaskId) {
+            $subtaskName = $request->input('subtask_name.' . $index);
+            $subtaskDescription = $request->input('subtask_description.' . $index);
+            if($subtaskDescription == null){$subtaskDescription = $subtaskName;}
+            $subtaskStatus = $request->input('subtask_status.' . $index);
+            if($subtaskStatus == null){$subtaskStatus = 'To Do';}
+            $subtaskAssignedTo = $request->input('subtask_assigned_to.' . $index);
+
             Subtask::updateOrCreate(
-                ['id' => $subtask],
+                ['id' => $subtaskId],
                 [
-                    'name' => $request->input('subtask_name.' . $index),
-                    'description' => $request->input('subtask_name.' . $index),
-                    'status' => $task->status,
+                    'name' => $subtaskName,
+                    'description' => $subtaskDescription,
+                    'status' => $subtaskStatus,
+                    'assigned_to' => $subtaskAssignedTo,
                     'user_id' => Auth::id(),
+                    'created_by' => Auth::id(),
                     'task_id' => $task->id,
                 ]
             );
         }
-    }
+    
 
-    Toastr::success('Task updated successfully!', 'Success');
-    return redirect()->route('tasks.index');
+    return redirect()->route('tasks.index')->with('success', 'Task updated successfully!');
 }
 
 
@@ -206,8 +246,25 @@ class TaskController extends Controller
     {
         $task->delete();
 
-        Toastr::success('Task deleted successfully!', 'Deleted');
-        return redirect()->route('tasks.index');
+        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully!');
+    }
+    
+    public function edit(Task $task){
+        //write this like create function 
+        if (Auth::user()->role === 'employee') {
+            return redirect()->route('admin.tasks.index')->withErrors('You are not authorized to create tasks!');
+        }
+
+        $userList = [];
+        if (Auth::user()->role === 'admin') {
+            $userList = $this->getUserListForAdmin();
+        } elseif (Auth::user()->role === 'manager') {
+            $userId = Auth::user()->id;
+            $userIds = $this->getManagerUserIds($userId,Auth::user()->name);
+            $userList = $this->getUserListForManager($userIds);
+        }
+
+        return view('admin.tasks.edit', compact('userList','task'));
     }
 
     public function createSubtask(Request $request, Task $task)
@@ -217,7 +274,7 @@ class TaskController extends Controller
             'description' => 'required',
         ]);
 
-        $subtask = new Subtask([
+        $subtask = Subtask::create([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
             'status' => 'To Do',
@@ -225,10 +282,7 @@ class TaskController extends Controller
             'task_id' => $task->id,
         ]);
 
-        $subtask->save();
-
-        Toastr::success('Subtask created successfully!', 'Success');
-        return redirect()->route('admin.tasks.edit', $task->id);
+        return redirect()->route('admin.tasks.edit', $task->id)->with('success', 'Subtask created successfully!');
     }
 
     public function updateSubtask(Request $request, Task $task, Subtask $subtask)
@@ -243,24 +297,21 @@ class TaskController extends Controller
             'description' => $request->input('description'),
         ]);
 
-        Toastr::success('Subtask updated successfully!', 'Success');
-        return redirect()->route('tasks.index', $task->id);
+        return redirect()->route('tasks.index', $task->id)->with('success', 'Subtask updated successfully!');
     }
 
     public function deleteSubtask(Task $task, Subtask $subtask)
     {
         $subtask->delete();
 
-        Toastr::error('Subtask deleted successfully!', 'Deleted');
-        return redirect()->route('admin.tasks.edit', $task->id);
+        return redirect()->route('admin.tasks.edit', $task->id)->with('error', 'Subtask deleted successfully!');
     }
 
     public function updateSubtaskStatus(Request $request, Subtask $subtask)
     {
         $request->validate([
-            'status' => 'required|in:To Do,In Progress,Completed',
+            'status' => 'required|in:To Do,In Progress,Completed,Approved',
         ]);
-
         $subtask->update([
             'status' => $request->input('status'),
         ]);

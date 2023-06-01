@@ -23,27 +23,36 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">To Do</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">In Progress</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">Completed</h4>
                     </div>
                 </div>
             </div>
+            @if(Auth::user()->role != 'employee')
+            <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Approved</h4>
+                    </div>
+                </div>
+            </div>
+            @endif
             <style>
                 .ToDo .draggable:hover {
                     background-color: grey;
@@ -66,12 +75,22 @@
                 .editsubtask{
                     font-size:8px;
                 }
+                .hider{
+                    opacity: 0.3;
+                }
+                .hider:hover{
+                    opacity: 0.9;
+                }
             </style>
             @foreach($tasks as $task)
                 <div class="col-md-12">
                     <div class="card" style="background:transparent;">
                         <div class="card-body">
-                            <h4 class="card-title">{{ $task->name }}</h4>
+                            <h4 class="card-title">
+                                <button class="btn btn-success hider"><i class="minimize-icon fa fa-angle-down" onclick="toggleTask(this)"></i></button>
+                                {{ $task->name }} 
+                            </h4>
+                            
                             <h6>{{ $task->description }}</h6>
                             @if(Auth::user()->role != 'employee')
                             <div class="row">
@@ -89,40 +108,61 @@
                             
                             
                             @endif
-                            <div class="row">
-                                <div taskid="{{$task->id}}" class="col-md-4 ToDo" style="background:#00000038;padding:1%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
+                            <div class="row task-content minimized">
+                                
+                                
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> ToDo" style="background:#00000038;padding:1%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'To Do')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
                                                     <p>{{ $subtask->description }}</p>
+                                                    @if(Auth::user()->role != 'employee')
+                                                        <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
+                                                    @endif
+                                                    @if(Auth::user()->role == 'employee')
+                                                        <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
+                                                    @endif
                                                     <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
                                                 </div>
                                             </div>
                                         @endif
                                     @endforeach
                                 </div>
-                                <div taskid="{{$task->id}}" class="col-md-4 InProgress" style="background:#ffff0038;padding:1%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> InProgress" style="background:#ffff0038;padding:1%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'In Progress')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
                                                     <p>{{ $subtask->description }}</p>
+                                                    @if(Auth::user()->role != 'employee')
+                                                        <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
+                                                    @endif
+                                                    @if(Auth::user()->role == 'employee')
+                                                        <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
+                                                    @endif
                                                     <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
                                                 </div>
                                             </div>
                                         @endif
                                     @endforeach
                                 </div>
-                                <div taskid="{{$task->id}}" class="col-md-4 Completed" style="background:#33ff0038;padding:1%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
+                                
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff0038;padding:1%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'Completed')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
                                                     <p>{{ $subtask->description }}</p>
+                                                    @if(Auth::user()->role != 'employee')
+                                                        <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
+                                                    @endif
+                                                    @if(Auth::user()->role == 'employee')
+                                                        <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
+                                                    @endif
                                                     <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
                                                 </div>
 
@@ -130,10 +170,32 @@
                                         @endif
                                     @endforeach
                                 </div>
+                                @if(Auth::user()->role != 'employee')
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff007d;padding:1%;" ondrop="handleDrop(event, 'Approved')" ondragover="handleDragOver(event)">
+                                    @foreach($task->subtasks as $subtask)
+                                        @if($subtask->status === 'Approved')
+                                            <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
+                                                <p>{{ $subtask->name }}</p>
+                                                <div class="subtaskDescript">
+                                                    <p>{{ $subtask->description }}</p>
+                                                    @if(Auth::user()->role != 'employee')
+                                                        <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
+                                                    @endif
+                                                    @if(Auth::user()->role == 'employee')
+                                                        <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
+                                                    @endif
+                                                    <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
+                                                </div>
+
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                                @endif
                             </div>
-                            @if(Auth::user()->role != 'employee')
-                                <b>{{$task->name}}</b> is assigned to:- <b>{{$userlist[$task->user_id]}}</b>
-                            @endif
+                            
+                                This task was created by :- <b>{{$userList[$task->created_by]}}</b>
+                            
                         </div>
                     </div>
                 </div>
@@ -143,8 +205,29 @@
 </div>
 
 @endsection
-
-
+<script>
+    function toggleTask(element) {
+       
+        if(element.parentElement.className.includes('btn-success')){
+            element.parentElement.className = element.parentElement.className.replace('btn-success','btn-danger');
+            element.className = element.className.replace('fa-angle-down', 'fa-angle-up');
+        }
+        else{
+            element.className = element.className.replace('fa-angle-up', 'fa-angle-down');
+            element.parentElement.className = element.parentElement.className.replace( 'btn-danger','btn-success');
+        }
+        
+       
+        
+        $(element).closest('.card-body').find('.task-content').toggleClass('minimized');
+    }
+</script>
+<style>
+    .task-content.minimized {
+        display: none;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 <script>
     function handleDragStart(event) {
         event.dataTransfer.setData('text/plain', event.target.id);
@@ -155,7 +238,7 @@
     }
 
     ALL_STATUSES = {
-        "InProgress":"In Progress","Completed":"Completed","ToDo":"To Do"
+        "InProgress":"In Progress","Completed":"Completed","ToDo":"To Do","Approved":"Approved"
     }
 
     function handleDrop(event, status) {
@@ -185,8 +268,8 @@
 
     function updateSubtaskStatus(subtaskId, newStatus) {
         const url = `subtasks/${subtaskId}/status`;
-
-        const requestOptions = {
+        console.log(newStatus);
+        const requestOptions = {    
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',

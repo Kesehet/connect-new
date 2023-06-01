@@ -54,6 +54,16 @@
                                         <button type="button" onclick="remSubtask(this)" class="btn btn-danger btn-sm remove-subtask"><i class="fas fa-trash"></i></button>
                                     </div>
                                 </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 text-right control-label col-form-label">Assigned To</label>
+                                    <div class="col-sm-9">
+                                        <select name="subtask_assigned_to[]" class="select2 form-control" multiple="multiple" style="width: 100%;" required>
+                                            @foreach ($userList as $userId => $username)
+                                                <option value="{{ $userId }}">{{ $username }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group row">
                                 <div class="col-sm-9 offset-sm-3">
@@ -61,28 +71,37 @@
                                 </div>
                                 <script>
                                     function addSubtask() {
-                                            var subtaskHtml = `
-                                            <div class="form-group row">
-                                                <label class="col-sm-3 text-right control-label col-form-label">Subtask Name</label>
-                                                <div class="col-sm-8">
-                                                    <input type="text" name="subtask_name[]" class="form-control" required>
-                                                </div>
-                                                <div class="col-sm-1">
-                                                    <button type="button" onclick="remSubtask(this)" class="btn btn-danger btn-sm remove-subtask"><i class="fas fa-trash"></i></button>
-                                                </div>
+                                        var subtaskHtml = `
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 text-right control-label col-form-label">Subtask Name</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" name="subtask_name[]" class="form-control" required>
                                             </div>
-                                            `;
-                                            $('#subtasks-container').append(subtaskHtml);
-                                        }
-                                   
+                                            <div class="col-sm-1">
+                                                <button type="button" onclick="remSubtask(this)" class="btn btn-danger btn-sm remove-subtask"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 text-right control-label col-form-label">Assigned To</label>
+                                            <div class="col-sm-9">
+                                                <select name="subtask_assigned_to[]" class="select2 form-control" multiple="multiple" style="width: 100%;" required>
+                                                    @foreach ($userList as $userId => $username)
+                                                        <option value="{{ $userId }}">{{ $username }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        `;
+                                        $('#subtasks-container').append(subtaskHtml);
+                                    }
 
-                                        // Remove subtask
-                                        function remSubtask(e) {
-                                            $(e).closest('.form-group').remove();
-                                        }
-                                   
+                                    // Remove subtask
+                                    function remSubtask(e) {
+                                        $(e).closest('.form-group').remove();
+                                    }
                                 </script>
                             </div>
+                            
                             <div class="border-top">
                                 <div class="card-body">
                                     <button type="submit" class="btn btn-dark">Create Task</button>
@@ -94,10 +113,16 @@
             </div>
         </div>
     </div>
-    </div>
-    @include('admin.includes.footer')
+</div>
+@include('admin.includes.footer')
 
 @endsection
-@section('scripts')
 
+@section('scripts')
+<!-- Include select2 library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    // Initialize select2
+    $('.select2').select2();
+</script>
 @endsection
