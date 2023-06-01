@@ -103,7 +103,7 @@ try {
                                     <div class="form-group row">
                                     
                                         <div class="col-sm-3">
-                                            <!--input type="text" name="leavetype" class="form-control" id="leavetype" placeholder="Leave Type" value="{{ Request::get('leavetype') }}" commented by Madhuri-->
+                                            <label>By Leave Type</label>
                                             <select type="text" name="leavetype" class="form-control" id="leavetype" value="" required="required">
                                             <option value="all">Show All</option>
                                             <option value="Annual Leave">Annual Leave</option>
@@ -594,7 +594,7 @@ try {
                                                     return $conn;
                                                 }
                                                 
-                                                $open= '<div class="col-sm-3" UniqueStr ><select type="text" name="userid" class="form-control" id="userid" placeholder="Select User"  ><option value="">Show All</option>';
+                                                $open= '<div class="col-sm-3" UniqueStr ><label>By User</label><select type="text" name="userid" class="form-control" id="userid" placeholder="Select User"  ><option value="">Show All</option>';
                                                 $mid="";
                                                 $close='</select></div>';
                                                 try {
@@ -657,13 +657,14 @@ try {
                                         <div class="col-sm-3">
                                         
                                             <!--input type="date" name="createddate" class="form-control" id="createddate" placeholder="Date filter" value="{{ Request::get('createddate') }}"commented by Madhuri-->
+                                            <label>Date From</label>
                                             <input type="date" min="{{date('Y-m-d'),strtotime("2013-01-19 01:23:42")}}" name="date_from" class="form-control" id="FromDate">
                                             
                                         </div>
                                         
                                         <div class="col-sm-3">
                                             <!--input type="date" name="createddate" class="form-control" id="createddate" placeholder="Date filter" value="{{ Request::get('createddate') }}"commented by Madhuri-->
-                                            
+                                            <label>Date To</label>
                                             <input type="date" min="{{date('Y-m-d', strtotime("-90 days"))}}" name="date_to" class="form-control" id="ToDate" >
                                             <script>
                                                 document.getElementById("FromDate").min = "2010-10-10"
@@ -675,13 +676,13 @@ try {
                                                 </script>
                                         </div>  
                                         <div class="col-sm-3">
-                                            
+                                            <label>By Status</label>
                                             <select name="status" class="form-control">
                                                 <option value="-1">All</option>
-                                                <option value="0">Pending</option>
-                                                <option value="1">Approved</option>
-                                                <option value="2">Rejected</option>
-                                                <option value="3">Canceled</option>
+                                                <option <?php echo (getValueOrDefault("status") == "0"? "selected":""); ?> value="0">Pending</option>
+                                                <option <?php echo (getValueOrDefault("status") == "1"? "selected":""); ?> value="1">Approved</option>
+                                                <option <?php echo (getValueOrDefault("status") == "2"? "selected":""); ?> value="2">Rejected</option>
+                                                <option <?php echo (getValueOrDefault("status") == "3"? "selected":""); ?> value="3">Canceled</option>
                                             </select>
                                         </div>                                     
                                     </div>
@@ -1015,7 +1016,7 @@ if($u["role"] == "admin" ){
                                                                             $leaveNow
                                                                         ).
                                                                         getDeff(
-                                                                            $leaveNow["is_approved"].isApprovedSpan($leaveNow["is_approved"]),
+                                                                            isApprovedSpan($leaveNow["is_approved"]),
                                                                             $leaveNow
                                                                         ).
                                                                         getDeff(

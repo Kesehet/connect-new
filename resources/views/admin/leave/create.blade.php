@@ -17,19 +17,19 @@
 
     <?php 
     $I_AM = Auth::user();
-    $guess_FY = intval(explode("-",Session::get('CFY'))[0]);
+    $guess_FY = floatval(explode("-",Session::get('CFY'))[0]);
     $TotalLeaves = getTotalLeavesForYear($I_AM->id,$guess_FY);
-    $TakenLeaves = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]));
+    $TakenLeaves = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]));
 
 
     
-    $sick = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%ick%");
-    $anual = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%nual%");
-    $maternity = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%Mat%");
-    $casual = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%Cas%");
-    $paternity = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%Pat%");
-    $Compensatory = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%Comp%");
-    $Unpaid = leavesTaken($I_AM->id,intval(explode("-",Session::get('CFY'))[0]),"%Unp%");
+    $sick = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%ick%");
+    $anual = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%nual%");
+    $maternity = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%Mat%");
+    $casual = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%Cas%");
+    $paternity = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%Pat%");
+    $Compensatory = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%Comp%");
+    $Unpaid = leavesTaken($I_AM->id,floatval(explode("-",Session::get('CFY'))[0]),"%Unp%");
 
 
 
@@ -42,7 +42,7 @@
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 $conn->close();
-                return intval($row["total_leave"]);
+                return floatval($row["total_leave"]);
             }
         }
     }
@@ -54,7 +54,7 @@
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 $conn->close();
-                return intval($row["total_leave"]);
+                return floatval($row["total_leave"]);
             }
         }
     }
@@ -66,7 +66,7 @@
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 $conn->close();
-                return intval($row["total_leave"]);
+                return floatval($row["total_leave"]);
             }
         }
     }
@@ -83,7 +83,7 @@
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 $conn->close();
-                return intval($row["total_leave"]);
+                return floatval($row["total_leave"]);
             }
         }
         
@@ -159,31 +159,31 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="row" style="display:<?php echo (intval($sick) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($sick) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Availed Sick Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $sick }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($anual) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($anual) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Availed Annual Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $anual }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($maternity) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($maternity) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Maternity Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $maternity }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($casual) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($casual) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Availed Casual Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $casual }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($paternity) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($paternity) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Paternity Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $paternity }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($Compensatory) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($Compensatory) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Compensatory Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $Compensatory }}</strong></div>
                                         </div>
-                                        <div class="row" style="display:<?php echo (intval($Unpaid) > 0 ?"":"none"); ?>;">
+                                        <div class="row" style="display:<?php echo (floatval($Unpaid) > 0 ?"":"none"); ?>;">
                                             <label for="fname" class="col-sm-4 text-right control-label col-form-label">Unpaid Leaves:</label>
                                             <div class="col-sm-4" style="line-height: 2.5;"><strong>{{ $Unpaid }}</strong></div>
                                         </div>
