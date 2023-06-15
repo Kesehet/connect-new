@@ -231,7 +231,7 @@
                             <div class="row task-content minimized">
                                 
                                 
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> ToDo" style="background:#00000038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> ToDo" style="background:#00000038;padding:0%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'To Do')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
@@ -252,8 +252,7 @@
                                         @endif
                                     @endforeach
                                 </div>
-                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> InProgress" style="background:#ffff0038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> InProgress" style="background:#ffff0038;padding:0%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'In Progress')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
@@ -274,8 +273,8 @@
                                         @endif
                                     @endforeach
                                 </div>
-                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff0038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
+                                
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff0038;padding:0%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'Completed')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
@@ -297,9 +296,8 @@
                                         @endif
                                     @endforeach
                                 </div>
-                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
                                 @if(Auth::user()->role != 'employee')
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff007d;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'Approved')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff007d;padding:0%;" ondrop="handleDrop(event, 'Approved')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'Approved')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
