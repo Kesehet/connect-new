@@ -31,6 +31,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskCommentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -226,10 +227,19 @@ Route::group(['middleware' => 'auth'], function (){
 	Route::post("tasks/store",[TaskController::class,"store"])->name("tasks.store");
 
 	Route::post('tasks/{task}/subtasks', 'TaskController@createSubtask')->name('tasks.subtasks.create');
-	Route::post('tasks/{task}/subtasks/{subtask}', 'TaskController@updateSubtask')->name('tasks.subtasks.update');
+	Route::post('subtasks/{subtask}', 'TaskController@updateSubtask')->name('tasks.subtasks.update');
 	Route::delete('tasks/{task}/subtasks/{subtask}', 'TaskController@deleteSubtask')->name('tasks.subtasks.delete');
 	
 	Route::post('/subtasks/{subtask}/status', 'TaskController@updateSubtaskStatus')->name('subtasks.updateStatus');
+	Route::get('/subtasks/{subtask}/editSubtask', 'TaskController@editSubtask')->name('subtasks.editSubtask');
+	
+
+	// Route for storing a new task comment
+	Route::post('/task-comments', [TaskCommentController::class, 'store'])->name('task-comments.store');
+	// Route for updating an existing task comment
+	Route::put('/task-comments/{taskComment}', [TaskCommentController::class, 'update'])->name('task-comments.update');
+	// Route for deleting a task comment
+	Route::post('/task-comments/{taskComment}', [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
 
 });

@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Task;
 use App\Models\Subtask;
 use App\Models\User;
+use App\Models\TaskComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+
 
 class TaskController extends Controller
 {
@@ -31,7 +33,7 @@ class TaskController extends Controller
             $tasks = $this->getTasksForAdmin();
             $userList = $this->getUserListForAdmin();
         } elseif ($userRole === 'manager') {
-            $userIds = $this->getManagerUserIds($userId,$managerName = Auth::user()->name);
+            $userIds = $this->getManagerUserIds($userId);
             $tasks = $this->getTasksForManager($userIds);
             $userList = $this->getUserListForManager($userIds);
         } else {
@@ -41,16 +43,21 @@ class TaskController extends Controller
         $tasksWithSubtasks = [];
         foreach ($tasks as $task) {
             $task->subtasks = $this->getSubtasksForTask($task->id);
-
+            // get all Task comments where task id is equal to task id. order by date desc
+            $task->comments = TaskComment::where('task_id', $task->id)->orderBy('created_at', 'DESC')->get();
             // Filter subtasks based on user role
             if ($userRole == 'employee') {
                 $task->subtasks = $task->subtasks->where('assigned_to', $userId);
             }
-
             $tasksWithSubtasks[] = $task;
         }
 
         $tasks = $tasksWithSubtasks;
+
+        
+        
+        
+        
         return view('admin.tasks.index', compact('tasks', 'userList'));
     }
     public function getUserListForEmployee(){
@@ -78,16 +85,22 @@ class TaskController extends Controller
     private function getUserListForAdmin()
     {
         $userList = User::query()
-            ->selectRaw("CONCAT(first_name, ' ', last_name) AS username, id")
-            ->pluck('username', 'id');
+            ->selectRaw("CONCAT(first_name, ' ', last_name) AS fullname, id")
+            ->pluck('fullname', 'id');
 
         return $userList;
     }
 
 
-    private function getManagerUserIds($userId, $managerName)
+    private function getManagerUserIds($userId)
     {
-        $managerName = 'your_manager_name';
+        //get the first name and the last name of the manager
+        $managerName = User::where('id', $userId)
+            ->value('first_name')
+            . ' '
+            . User::where('id', $userId)
+            ->value('last_name');
+        
         $userIds = User::where('manager', $managerName)->pluck('id')->toArray();
         $userIds[] = $userId;
         return $userIds;
@@ -101,8 +114,14 @@ class TaskController extends Controller
 
     private function getUserListForManager($userIds)
     {
-        $userList = User::whereIn('id', $userIds)
-            ->pluck(DB::raw("CONCAT(first_name, ' ', last_name) AS username"), 'id');
+        
+        $userList = User::whereIn('id', $userIds)->pluck('first_name', 'id')->toArray();
+        $ids = array_keys($userList);
+        for ($i=0; $i < count($ids); $i++) { 
+            $userList[$ids[$i]] = $userList[$ids[$i]] . ' '. User::where('id', $ids[$i])->value('last_name');
+        }
+        
+        
         return $userList;
     }
 
@@ -139,7 +158,7 @@ class TaskController extends Controller
             $userList = $this->getUserListForAdmin();
         } elseif (Auth::user()->role === 'manager') {
             $userId = Auth::user()->id;
-            $userIds = $this->getManagerUserIds($userId,Auth::user()->name);
+            $userIds = $this->getManagerUserIds($userId);
             $userList = $this->getUserListForManager($userIds);
         }
 
@@ -260,12 +279,43 @@ class TaskController extends Controller
             $userList = $this->getUserListForAdmin();
         } elseif (Auth::user()->role === 'manager') {
             $userId = Auth::user()->id;
-            $userIds = $this->getManagerUserIds($userId,Auth::user()->name);
+            $userIds = $this->getManagerUserIds($userId);
             $userList = $this->getUserListForManager($userIds);
         }
 
         return view('admin.tasks.edit', compact('userList','task'));
     }
+
+    public function editSubtask(Subtask $subtask){
+        
+        $subtask->comments = TaskComment::where('subtask_id', $subtask->id)->orderBy('created_at', 'DESC')->get();
+        $userList = [];
+
+        $userList[$subtask->user_id] = User::find($subtask->user_id)->first_name . ' ' . User::find($subtask->user_id)->last_name;
+        $userList[$subtask->assigned_to] =User::find($subtask->assigned_to)->first_name . ' ' . User::find($subtask->assigned_to)->last_name ;
+        $userList[$subtask->created_by] = User::find($subtask->created_by)->first_name . ' ' . User::find($subtask->created_by)->last_name;
+
+        if (Auth::user()->role === 'admin') {
+            $userList[Auth::id()] = Auth::user()->first_name . ' ' . Auth::user()->last_name;
+        }
+
+        $userIds = array_keys($userList);
+
+        
+        if (in_array(Auth::id(), $userIds)) {
+            return view('admin.tasks.editSubtask', compact('userList', 'subtask'));    
+            // Auth::id() exists in $userList
+            
+        } else {
+            // Auth::id() does not exist in $userList
+            return redirect()->route('tasks.index')->withErrors('You are not authorized to edit subtasks!');
+        }
+
+
+        
+        
+    }
+
 
     public function createSubtask(Request $request, Task $task)
     {
@@ -285,20 +335,21 @@ class TaskController extends Controller
         return redirect()->route('admin.tasks.edit', $task->id)->with('success', 'Subtask created successfully!');
     }
 
-    public function updateSubtask(Request $request, Task $task, Subtask $subtask)
-    {
-        $request->validate([
-            'name' => 'required',
-            'description' => 'required',
-        ]);
+   public function updateSubtask(Request $request, Subtask $subtask)
+{
+    $validatedData = $request->validate([
+        'name' => 'required',
+        'description' => 'required',
+        'assigned_to' => 'required',
+        'status' => 'required',
+        'comments' => 'nullable',
+    ]);
 
-        $subtask->update([
-            'name' => $request->input('name'),
-            'description' => $request->input('description'),
-        ]);
+    $subtask->update($validatedData);
 
-        return redirect()->route('tasks.index', $task->id)->with('success', 'Subtask updated successfully!');
-    }
+    return redirect()->route('tasks.show', $subtask->task_id)->with('success', 'Subtask updated successfully.');
+}
+
 
     public function deleteSubtask(Task $task, Subtask $subtask)
     {

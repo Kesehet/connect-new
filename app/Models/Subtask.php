@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Subtask extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'name', 'description', 'status', 'user_id', 'task_id',"assigned_to", "created_by"    
+        'name', 'description', 'status', 'user_id', 'task_id', 'assigned_to', 'created_by'
     ];
 
     public function task()
@@ -21,6 +22,7 @@ class Subtask extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -29,5 +31,10 @@ class Subtask extends Model
     public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(TaskComment::class);
     }
 }

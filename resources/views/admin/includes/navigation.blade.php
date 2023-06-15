@@ -43,7 +43,7 @@
                 </li>
 
                 <li class="nav-item dropdown">
-                    <div class="breadcrumb-item active" style="font-size: 12px; color: #27a9e3; padding: 23px 10px 0 10px;"><b>EMS 2.0</b></div>  
+                    <div class="breadcrumb-item active" style="font-size: 12px; color: #27a9e3; padding: 23px 10px 0 10px;"><b>EMS 1.0.1</b></div>  
                 </li>
                 
                 <li class="nav-item dropdown">

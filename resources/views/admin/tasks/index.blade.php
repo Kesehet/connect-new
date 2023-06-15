@@ -40,7 +40,7 @@
             <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">Completed</h4>
+                        <h4 class="card-title"><?php if (Auth::user()->role != 'employee') { echo 'Awaiting Approval'; } else { echo 'Completed'; } ?> </h4>
                     </div>
                 </div>
             </div>
@@ -96,12 +96,12 @@
                             <div class="row">
                             <form class="col-md-2" action="{{ route('tasks.edit', $task->id) }}" method="GET" >
                                 @csrf
-                                <button type="submit" class="btn btn-primary editsubtask">Edit Task</button>
+                                <button type="submit" class="btn btn-primary editsubtask"><i class="fa fa-pencil-alt"></i></button>
                             </form>
                             <form class="col-md-2" action="{{ route('tasks.destroy', $task->id) }}" method="POST">
                                 @method('DELETE')
                                 @csrf
-                                <button type="submit" class=" btn btn-danger editsubtask">Delete Task</button>
+                                <button type="submit" class=" btn btn-danger editsubtask"><i class="fas fa-trash-alt"></i></button>
                             </form>
 
                             </div>
@@ -124,7 +124,7 @@
                                                     @if(Auth::user()->role == 'employee')
                                                         <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
                                                     @endif
-                                                    <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
+                                                    <button onclick="window.location.href='{{route('subtasks.editSubtask',$subtask->id)}}'" class="btn btn-success editsubtask"><i class="fa fa-chevron-right"></i></button>
                                                 </div>
                                             </div>
                                         @endif
@@ -143,7 +143,7 @@
                                                     @if(Auth::user()->role == 'employee')
                                                         <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
                                                     @endif
-                                                    <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
+                                                    <button onclick="window.location.href='{{route('subtasks.editSubtask',$subtask->id)}}'" class="btn btn-success editsubtask"><i class="fa fa-chevron-right"></i></button>
                                                 </div>
                                             </div>
                                         @endif
@@ -163,7 +163,7 @@
                                                     @if(Auth::user()->role == 'employee')
                                                         <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
                                                     @endif
-                                                    <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
+                                                    <button onclick="window.location.href='{{route('subtasks.editSubtask',$subtask->id)}}'" class="btn btn-success editsubtask"><i class="fa fa-chevron-right"></i></button>
                                                 </div>
 
                                             </div>
@@ -184,7 +184,7 @@
                                                     @if(Auth::user()->role == 'employee')
                                                         <p style="font-size:8px;">Assigned by {{ $userList[$subtask->created_by] }}</p>
                                                     @endif
-                                                    <button onclick="convertToForm({{ $task->id }},{{ $subtask->id }})" href="#" class="btn btn-primary editsubtask">Edit SubTask</button>
+                                                    <button onclick="window.location.href='{{route('subtasks.editSubtask',$subtask->id)}}'" class="btn btn-success editsubtask"><i class="fa fa-chevron-right"></i></button>
                                                 </div>
 
                                             </div>
@@ -300,61 +300,5 @@
 
 </script>
 
-<script>
-    function convertToForm(task,subtaskId) {
-        const draggableCard = document.getElementById(`draggable_${subtaskId}_card`);
-        const subtaskName = draggableCard.querySelector('p').textContent;
-        const subtaskDescription = draggableCard.querySelector('.subtaskDescript p').textContent;
 
-        const form = document.createElement('form');
-        form.setAttribute('id', `form_${subtaskId}`);
-        form.setAttribute('action', `tasks/${task}/subtasks/${subtaskId}`);
-        form.setAttribute('method', 'POST');
 
-        const csrfTokenInput = document.createElement('input');
-        csrfTokenInput.setAttribute('type', 'hidden');
-        csrfTokenInput.setAttribute('name', '_token');
-        csrfTokenInput.setAttribute('value', '{{ csrf_token() }}');
-
-        const methodInput = document.createElement('input');
-        methodInput.setAttribute('type', 'hidden');
-        methodInput.setAttribute('name', '_method');
-        methodInput.setAttribute('value', 'POST');
-
-        const nameLabel = document.createElement('label');
-        nameLabel.textContent = 'Name:';
-        nameLabel.className = "col-sm-12  control-label col-form-label";
-
-        const nameInput = document.createElement('input');
-        nameInput.setAttribute('type', 'text');
-        nameInput.setAttribute('name', 'name');
-        nameInput.className = "form-control";
-        nameInput.setAttribute('value', subtaskName);
-
-        const descriptionLabel = document.createElement('label');
-        descriptionLabel.textContent = 'Description:';
-        descriptionLabel.className = "col-sm-12  control-label col-form-label";
-
-        const descriptionInput = document.createElement('textarea');
-        descriptionInput.setAttribute('type', 'text');
-        descriptionInput.setAttribute('name', 'description');
-        descriptionInput.className = "form-control";
-        descriptionInput.innerHTML = subtaskDescription;
-
-        const submitButton = document.createElement('button');
-        submitButton.setAttribute('type', 'submit');
-        submitButton.className = "btn btn-success"
-        submitButton.textContent = 'Update SubTask';
-
-        form.appendChild(csrfTokenInput);
-        form.appendChild(methodInput);
-        form.appendChild(nameLabel);
-        form.appendChild(nameInput);
-        form.appendChild(descriptionLabel);
-        form.appendChild(descriptionInput);
-        form.appendChild(submitButton);
-
-        draggableCard.innerHTML = '';
-        draggableCard.appendChild(form);
-    }
-</script>
