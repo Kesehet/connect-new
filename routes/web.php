@@ -225,13 +225,14 @@ Route::group(['middleware' => 'auth'], function (){
 	Route::post("tasks/update/{task}",[TaskController::class,"update"])->name("tasks.update");
 	Route::get("tasks/create",[TaskController::class,"create"])->name("tasks.create");
 	Route::post("tasks/store",[TaskController::class,"store"])->name("tasks.store");
-
-	Route::post('tasks/{task}/subtasks', 'TaskController@createSubtask')->name('tasks.subtasks.create');
-	Route::post('subtasks/{subtask}', 'TaskController@updateSubtask')->name('tasks.subtasks.update');
-	Route::delete('tasks/{task}/subtasks/{subtask}', 'TaskController@deleteSubtask')->name('tasks.subtasks.delete');
+	Route::post("/tasks/archive/{task}/{archive}",[TaskController::class,"archiveTask"])->name("tasks.archive");
 	
-	Route::post('/subtasks/{subtask}/status', 'TaskController@updateSubtaskStatus')->name('subtasks.updateStatus');
-	Route::get('/subtasks/{subtask}/editSubtask', 'TaskController@editSubtask')->name('subtasks.editSubtask');
+	Route::post('tasks/{task}/subtasks', [TaskController::class, 'createSubtask'])->name('tasks.subtasks.create');
+	Route::put('subtasks/{subtask}', [TaskController::class, 'updateSubtask'])->name('tasks.subtasks.update');
+	Route::delete('tasks/{task}/subtasks/{subtask}', [TaskController::class, 'deleteSubtask'])->name('tasks.subtasks.delete');
+	
+	Route::post('/subtasks/{subtask}/status', [TaskController::class, 'updateSubtaskStatus'])->name('subtasks.updateStatus');
+	Route::get('/subtasks/{subtask}/editSubtask', [TaskController::class, 'editSubtask'])->name('subtasks.editSubtask');
 	
 
 	// Route for storing a new task comment

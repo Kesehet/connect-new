@@ -14,7 +14,6 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Home</a></li>
                             <li class="breadcrumb-item"><a href="{{ route('tasks.index') }}">Tasks</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('tasks.show', $subtask->task_id) }}">Task Details</a></li>
                             <li class="breadcrumb-item active" aria-current="page">Subtask</li>
                         </ol>
                     </nav>
@@ -37,12 +36,14 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title">{{$subtask->name}}</h4>
-                        <p class="">{{$subtask->description}}</p>
+                        @if ($subtask->description != $subtask->name)
+                            <p>{{ $subtask->description }}</p>
+                        @endif
                         <p>
-                            
-                                This task was assigned to {{ isset($userList[$subtask->assigned_to]) ? $userList[$subtask->assigned_to] : '' }} and was
-                                created by {{ isset($userList[$subtask->created_by]) ? $userList[$subtask->created_by] : '' }}.
-                            
+                        This task was assigned to {{ $userList[$subtask->assigned_to] ?? '' }}
+                        @if ($subtask->assigned_to !== $subtask->created_by)
+                            and was created by {{ $userList[$subtask->created_by] ?? '' }}
+                        @endif
                         </p>
                         <p>
                             <b>Status:</b> {{$subtask->status}}
@@ -50,7 +51,14 @@
                         <!-- show edit button to allow user to edit subtask -->
                         @foreach($userList as $userId => $username)
                             @if ($subtask->assigned_to == $userId)
-                                <a id="edit-button" class="btn btn-sm btn-primary">Edit</a>
+                                <a id="edit-button" class="btn btn-sm btn-success" style="background-color: #ffffff;color: #219864;"><i class="fa fa-pencil-alt" > </i></a>
+                                <a class="btn btn-sm btn-danger" style="background-color: #ffffff;color: #dc3545;" href="{{ route('tasks.subtasks.delete', ['task' => $subtask->task_id, 'subtask' => $subtask]) }}" onclick="event.preventDefault(); document.getElementById('delete-subtask-form').submit();">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                                <form id="delete-subtask-form" action="{{ route('tasks.subtasks.delete', ['task' => $subtask->task_id, 'subtask' => $subtask]) }}" method="POST" style="display: none;">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
                                 @break    
                             @endif
                         @endforeach
@@ -109,7 +117,7 @@
                         <form action="{{ route('tasks.subtasks.update', $subtask->id) }}" method="POST">
                             @csrf
                             @method('PUT')
-                            
+                            <input type="hidden" name="task_id" id="task_id" class="form-control" value="{{ $subtask->task_id }}" required>
                             <div class="form-group">
                                 <label for="name">Subtask Name</label>
                                 <input type="text" name="name" id="name" class="form-control" value="{{ $subtask->name }}" required>
@@ -121,17 +129,29 @@
                             <div class="form-group">
                                 <label for="assigned_to">Assigned To</label>
                                 <select name="assigned_to" id="assigned_to" class="form-control" required>
-                                    @foreach($userList as $userId => $username)
-                                        <option value="{{ $userId }}" {{ $subtask->assigned_to == $userId ? 'selected' : '' }}>{{ $username }}</option>
-                                    @endforeach
+                                    @if (Auth::user()->role != "employee")
+                                        @foreach($userList as $userId => $username)
+                                            <option value="{{ $userId }}" {{ $subtask->assigned_to == $userId ? 'selected' : '' }}>{{ $username }}</option>
+                                        @endforeach
+                                    @elseif(Auth::user()->role == "manager")
+                                        <option value="{{ Auth::user()->id }}">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</option>
+                                        <option value="{{$subtask->assigned_to}}" selected>{{ $subtask->assigned_to }}</option>
+                                        <option value="{{$subtask->created_by}}">{{ $subtask->created_by }}</option>
+                                    @else
+                                        <option value="{{ Auth::user()->id }}" selected>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</option>
+                                    @endif
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="status">Status</label>
                                 <select name="status" id="status" class="form-control" required>
-                                    <option value="todo" {{ $subtask->status == 'todo' ? 'selected' : '' }}>To Do</option>
-                                    <option value="inprogress" {{ $subtask->status == 'inprogress' ? 'selected' : '' }}>In Progress</option>
-                                    <option value="completed" {{ $subtask->status == 'completed' ? 'selected' : '' }}>Completed</option>
+                                    <option value="To Do" {{ $subtask->status == 'To Do' ? 'selected' : '' }}>To Do</option>
+                                    <option value="In Progress" {{ $subtask->status == 'In Progress' ? 'selected' : '' }}>In Progress</option>
+                                    <option value="Completed" {{ $subtask->status == 'Completed' ? 'selected' : '' }}>Completed</option>
+                                    @if(Auth::user()->role == "manager" || Auth::user()->role == "admin")
+                                    <option value="Approved" {{ $subtask->status == 'Approved' ? 'selected' : '' }}>Completed</option>
+                                    
+                                    @endif
                                 </select>
                             </div>
                             

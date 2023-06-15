@@ -26,21 +26,134 @@
             <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">To Do</h4>
+                        <h4 class="card-title"><h4 class="card-title"><?php
+                            $randomNumber = rand()%10;
+                            if (Auth::user()->role != 'employee') {
+                                echo 'To Do';
+                            } else {
+                                switch ($randomNumber) {
+                                    case 0:
+                                        echo 'To Do';
+                                        break;
+                                    case 1:
+                                        echo 'Task List';
+                                        break;
+                                    case 2:
+                                        echo 'Pending Tasks';
+                                        break;
+                                    case 3:
+                                        echo 'Upcoming Tasks';
+                                        break;
+                                    case 4:
+                                        echo 'Open Tasks';
+                                        break;
+                                    case 5:
+                                        echo 'Action Items';
+                                        break;
+                                    case 6:
+                                        echo 'Task Queue';
+                                        break;
+                                    case 7:
+                                        echo 'Task Backlog';
+                                        break;
+                                    case 8:
+                                        echo 'Assignments';
+                                        break;
+                                    case 9:
+                                        echo 'Task Assigned';
+                                        break;
+                                }
+                            }
+                        ?></h4>
                     </div>
                 </div>
             </div>
             <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title">In Progress</h4>
+                    <h4 class="card-title"><?php
+                        $randomNumber = rand()%8;
+                        if (Auth::user()->role != 'employee') {
+                            echo 'Ongoing Tasks';
+                        } else {
+                            switch ($randomNumber) {
+                                case 0:
+                                    echo 'Work in Progress';
+                                    break;
+                                case 1:
+                                    echo 'In Progress';
+                                    break;
+                                case 2:
+                                    echo 'Ongoing Tasks';
+                                    break;
+                                case 3:
+                                    echo 'Tasks in Motion';
+                                    break;
+                                case 4:
+                                    echo 'In Development';
+                                    break;
+                                case 5:
+                                    echo 'Processing Tasks';
+                                    break;
+                                case 6:
+                                    echo 'Tasks in Progress';
+                                    break;
+                                case 7:
+                                    echo 'Tasks Underway';
+                                    break;
+                                // Add more cases for additional headings as needed
+                            }
+                        }
+                    ?></h4>
                     </div>
                 </div>
             </div>
             <div class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?>">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title"><?php if (Auth::user()->role != 'employee') { echo 'Awaiting Approval'; } else { echo 'Completed'; } ?> </h4>
+                    <h4 class="card-title"><?php
+                        $randomNumber = rand()%11;
+                        if (Auth::user()->role != 'employee') {
+                            echo 'Awaiting Approval';
+                        } else {
+                            switch ($randomNumber) {
+                                case 0:
+                                    echo 'Request Approval';
+                                    break;
+                                case 1:
+                                    echo 'Send for Approval';
+                                    break;
+                                case 2:
+                                    echo 'Pass for Approval';
+                                    break;
+                                case 3:
+                                    echo 'Transmit Approval';
+                                    break;
+                                case 4:
+                                    echo 'Dispatch for Approval';
+                                    break;
+                                case 5:
+                                    echo 'Seek Approval';
+                                    break;
+                                case 6:
+                                    echo 'Request Review';
+                                    break;
+                                case 7:
+                                    echo 'Obtain Consent';
+                                    break;
+                                case 8:
+                                    echo 'Forward for Approval';
+                                    break;
+                                case 9:
+                                    echo 'Submit for Approval';
+                                    break;
+                                case 10:
+                                    echo 'Propose Approval';
+                                    break;
+                                // Add more cases for additional headings as needed
+                            }
+                        }
+                    ?></h4>
                     </div>
                 </div>
             </div>
@@ -83,6 +196,9 @@
                 }
             </style>
             @foreach($tasks as $task)
+                @if ($task->status == "Archived")
+                    @continue
+                @endif
                 <div class="col-md-12">
                     <div class="card" style="background:transparent;">
                         <div class="card-body">
@@ -103,6 +219,10 @@
                                 @csrf
                                 <button type="submit" class=" btn btn-danger editsubtask"><i class="fas fa-trash-alt"></i></button>
                             </form>
+                            <form action="{{ route('tasks.archive', ['task' => $task, 'archive' => ($task->status == 'Archived' ? 0 : 1)]) }}" method="POST">
+                                @csrf
+                                <button class=" btn btn-secondary editsubtask" type="submit"><i class="fas fa-archive"></i></button>
+                            </form>
 
                             </div>
                             
@@ -111,13 +231,15 @@
                             <div class="row task-content minimized">
                                 
                                 
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> ToDo" style="background:#00000038;padding:1%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> ToDo" style="background:#00000038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'ToDo')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'To Do')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
-                                                    <p>{{ $subtask->description }}</p>
+                                                    @if ($subtask->description != $subtask->name)
+                                                        <p>{{ $subtask->description }}</p>
+                                                    @endif
                                                     @if(Auth::user()->role != 'employee')
                                                         <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
                                                     @endif
@@ -130,13 +252,16 @@
                                         @endif
                                     @endforeach
                                 </div>
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> InProgress" style="background:#ffff0038;padding:1%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
+                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> InProgress" style="background:#ffff0038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'InProgress')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'In Progress')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
-                                                    <p>{{ $subtask->description }}</p>
+                                                    @if ($subtask->description != $subtask->name)
+                                                        <p>{{ $subtask->description }}</p>
+                                                    @endif
                                                     @if(Auth::user()->role != 'employee')
                                                         <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
                                                     @endif
@@ -149,14 +274,16 @@
                                         @endif
                                     @endforeach
                                 </div>
-                                
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff0038;padding:1%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
+                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff0038;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'Completed')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'Completed')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
-                                                    <p>{{ $subtask->description }}</p>
+                                                    @if ($subtask->description != $subtask->name)
+                                                        <p>{{ $subtask->description }}</p>
+                                                    @endif
                                                     @if(Auth::user()->role != 'employee')
                                                         <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
                                                     @endif
@@ -170,14 +297,17 @@
                                         @endif
                                     @endforeach
                                 </div>
+                                <div class="col-md-2" style="flex: 0 0 5%;padding:0px;"></div>
                                 @if(Auth::user()->role != 'employee')
-                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff007d;padding:1%;" ondrop="handleDrop(event, 'Approved')" ondragover="handleDragOver(event)">
+                                <div taskid="{{$task->id}}" class="col-md-<?php echo (Auth::user()->role != 'employee' ? 3:4) ?> Completed" style="background:#33ff007d;padding:0%;flex: 0 0 20%;" ondrop="handleDrop(event, 'Approved')" ondragover="handleDragOver(event)">
                                     @foreach($task->subtasks as $subtask)
                                         @if($subtask->status === 'Approved')
                                             <div taskid="{{$task->id}}" id="draggable_{{$subtask->id}}_card" class="card draggable" style="padding:10%;" draggable="true" ondragstart="handleDragStart(event)">
                                                 <p>{{ $subtask->name }}</p>
                                                 <div class="subtaskDescript">
-                                                    <p>{{ $subtask->description }}</p>
+                                                    @if ($subtask->description != $subtask->name)
+                                                        <p>{{ $subtask->description }}</p>
+                                                    @endif
                                                     @if(Auth::user()->role != 'employee')
                                                         <p style="font-size:8px;">Assigned to {{ $userList[$subtask->assigned_to] }}</p>
                                                     @endif
@@ -193,13 +323,39 @@
                                 </div>
                                 @endif
                             </div>
-                            
+                                
                                 This task was created by :- <b>{{$userList[$task->created_by]}}</b>
                             
                         </div>
                     </div>
                 </div>
             @endforeach
+            @if ( Auth::user()->role != 'employee')
+                <div class="col-md-12">
+                    <br><br><br><br><br><br><br><br><br><br><br><br>
+                    <h4 class="page-title">Archived Tasks</h4>
+                    <hr/>
+                </div>
+                @foreach($tasks as $task)
+                    @if ($task->status != "Archived")
+                        @continue
+                    @endif
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{$task->name}}</h5>
+                                <p >{{$task->description}}</p>
+                                <p> Creator : {{$userList[$task->created_by]}}</p>
+                                <form style="float:right;width:100%;" action="{{ route('tasks.archive', ['task' => $task, 'archive' => ($task->status == 'Archived' ? 0 : 1)]) }}" method="POST">
+                                    @csrf
+                                    <button style="width:100%;" class=" btn btn-success editsubtask" type="submit"><i class="fas fa-archive"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                
+                @endforeach
+            @endif
         </div>
     </div>
 </div>

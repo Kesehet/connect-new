@@ -50,6 +50,7 @@
                                 <div class="form-group row">
                                     <label class="col-sm-3 text-right control-label col-form-label">Subtask Name</label>
                                     <div class="col-sm-8">
+                                    <input type="hidden" name="subtask_id[]" class="form-control" value="{{ $subtask->id }}" required>
                                         <input type="text" name="subtask_name[]" class="form-control" value="{{ $subtask->name }}" required>
                                     </div>
                                     <div class="col-sm-1">

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 
+
 class TaskController extends Controller
 {
     public function __construct()
@@ -62,7 +63,11 @@ class TaskController extends Controller
     }
     public function getUserListForEmployee(){
         
-        return $this->getUserListForAdmin();
+        //take auth user id and get that user as userlist array
+        return User::query()
+            ->selectRaw("CONCAT(first_name, ' ', last_name) AS fullname, id")
+            ->pluck('fullname', 'id');
+
     }
     /**
      * Retrieves the role of a user given their user ID.
@@ -179,13 +184,13 @@ class TaskController extends Controller
         ]);
 
         $userId = Auth::user()->id;
-        $createdBy = Auth::user()->role === 'admin' ? $userId : null;
+        
 
         $task = Task::create([
             'name' => $request->input('name'),
             'description' => $request->input('description'),
             'user_id' => $userId,
-            'created_by' => $createdBy,
+            'created_by' => Auth::id(),
         ]);
 
         foreach ($request->input('subtask_name', []) as $index => $subtaskName) {
@@ -206,59 +211,80 @@ class TaskController extends Controller
     }
 
     public function update(Request $request, Task $task)
-{
-    // Validate subtasks which will be an array of subtask names and descriptions along with their statuses
-    $request->validate([
-        'name' => 'required',
-        'description' => 'required',
-        'subtask_name' => 'required',
-        'subtask_assigned_to' => 'required',
-        "subtask_description" => "required",
-    ]);
-
-    $userRole = Auth::user()->role;
-
-    
-        $task->update([
-            'name' => $request->input('name'),
-            'description' => $request->input('description'),
+    {
+        // Validate subtasks which will be an array of subtask names and descriptions along with their statuses
+        $request->validate([
+            'name' => 'required',
+            'description' => 'required',
+            'subtask_name.*' => 'required',
+            'subtask_description.*' => 'required',
+            'subtask_assigned_to.*' => 'required',
         ]);
     
-
+        $userRole = Auth::user()->role;
     
-        $subtasks = $request->input('subtask_name', []);
-        $existingSubtasks = $task->subtasks->pluck('id')->toArray();
-
-        // Delete removed subtasks
-        $subtasksToDelete = array_diff($existingSubtasks, $subtasks);
-        Subtask::whereIn('id', $subtasksToDelete)->delete();
-
+        $task->name = $request->input('name');
+        $task->description = $request->input('description');
+        $task->save();
+    
+        $subtaskIds = $request->input('subtask_id', []);
+        $subtaskNames = $request->input('subtask_name', []);
+        $subtaskDescriptions = $request->input('subtask_description', []);
+        $subtaskAssignedTo = $request->input('subtask_assigned_to', []);
+    
         // Update or create subtasks
-        foreach ($subtasks as $index => $subtaskId) {
-            $subtaskName = $request->input('subtask_name.' . $index);
-            $subtaskDescription = $request->input('subtask_description.' . $index);
-            if($subtaskDescription == null){$subtaskDescription = $subtaskName;}
-            $subtaskStatus = $request->input('subtask_status.' . $index);
-            if($subtaskStatus == null){$subtaskStatus = 'To Do';}
-            $subtaskAssignedTo = $request->input('subtask_assigned_to.' . $index);
-
-            Subtask::updateOrCreate(
-                ['id' => $subtaskId],
-                [
+        foreach ($subtaskNames as $index => $subtaskName) {
+            $subtaskId = $subtaskIds[$index] ?? null;
+            $subtaskDescription = $subtaskDescriptions[$index] ?? $subtaskName ;
+            $subtaskAssignedTo = $subtaskAssignedTo[$index];
+    
+            if ($subtaskId) {
+                // Update existing subtask
+                $subtask = Subtask::findOrFail($subtaskId);
+                $subtask->name = $subtaskName;
+                $subtask->description = $subtaskDescription;
+                $subtask->status = 'To Do'; // Set status to 'To Do' for updated subtasks
+                $subtask->assigned_to = $subtaskAssignedTo;
+                $subtask->user_id = Auth::id();
+                $subtask->created_by = Auth::id();
+                $subtask->task_id = $task->id;
+                $subtask->save();
+            } else {
+                // Create new subtask
+                Subtask::create([
                     'name' => $subtaskName,
                     'description' => $subtaskDescription,
-                    'status' => $subtaskStatus,
+                    'status' => 'To Do', // Set status to 'To Do' for new subtasks
                     'assigned_to' => $subtaskAssignedTo,
                     'user_id' => Auth::id(),
                     'created_by' => Auth::id(),
                     'task_id' => $task->id,
-                ]
-            );
+                ]);
+            }
         }
     
+        return redirect()->route('tasks.index')->with('success', 'Task updated successfully!');
+    }
+    
+    public function archiveTask(Request $request, Task $task, $archive)
+    {
+        // Validate subtasks which will be an array of subtask names and descriptions along with their statuses
+        
+    
+        $task->status = "To Do";
+        if($archive){
+            $task->status = "Archived";
+        }
+        
+        $task->save();
+    
+        
+    
+        return redirect()->route('tasks.index')->with('success', 'Task archived successfully!');
+    }
 
-    return redirect()->route('tasks.index')->with('success', 'Task updated successfully!');
-}
+    
+    
 
 
     public function destroy(Task $task)
@@ -286,17 +312,26 @@ class TaskController extends Controller
         return view('admin.tasks.edit', compact('userList','task'));
     }
 
+    /**
+     * Edit a subtask.
+     *
+     * @param Subtask $subtask subtask to edit
+     * @throws Some_Exception_Class if something goes wrong
+     * @return view or redirect view on success, redirect on failure
+     */
     public function editSubtask(Subtask $subtask){
         
         $subtask->comments = TaskComment::where('subtask_id', $subtask->id)->orderBy('created_at', 'DESC')->get();
-        $userList = [];
-
-        $userList[$subtask->user_id] = User::find($subtask->user_id)->first_name . ' ' . User::find($subtask->user_id)->last_name;
-        $userList[$subtask->assigned_to] =User::find($subtask->assigned_to)->first_name . ' ' . User::find($subtask->assigned_to)->last_name ;
-        $userList[$subtask->created_by] = User::find($subtask->created_by)->first_name . ' ' . User::find($subtask->created_by)->last_name;
-
+        
         if (Auth::user()->role === 'admin') {
-            $userList[Auth::id()] = Auth::user()->first_name . ' ' . Auth::user()->last_name;
+            $userList = $this->getUserListForAdmin()->toArray();
+        }
+        if (Auth::user()->role === 'manager') {
+            $userList = $this->getUserListForManager($this->getManagerUserIds(Auth::user()->id));
+        }
+        
+        if(Auth::user()->role === 'employee'){
+            $userList = $this->getUserListForEmployee()->toArray();
         }
 
         $userIds = array_keys($userList);
@@ -310,10 +345,6 @@ class TaskController extends Controller
             // Auth::id() does not exist in $userList
             return redirect()->route('tasks.index')->withErrors('You are not authorized to edit subtasks!');
         }
-
-
-        
-        
     }
 
 
@@ -332,7 +363,7 @@ class TaskController extends Controller
             'task_id' => $task->id,
         ]);
 
-        return redirect()->route('admin.tasks.edit', $task->id)->with('success', 'Subtask created successfully!');
+        return redirect()->route('tasks.edit', $task->id)->with('success', 'Subtask created successfully!');
     }
 
    public function updateSubtask(Request $request, Subtask $subtask)
@@ -340,6 +371,7 @@ class TaskController extends Controller
     $validatedData = $request->validate([
         'name' => 'required',
         'description' => 'required',
+        'task_id' => 'required',
         'assigned_to' => 'required',
         'status' => 'required',
         'comments' => 'nullable',
@@ -347,7 +379,7 @@ class TaskController extends Controller
 
     $subtask->update($validatedData);
 
-    return redirect()->route('tasks.show', $subtask->task_id)->with('success', 'Subtask updated successfully.');
+    return redirect()->back();
 }
 
 
@@ -355,7 +387,7 @@ class TaskController extends Controller
     {
         $subtask->delete();
 
-        return redirect()->route('admin.tasks.edit', $task->id)->with('error', 'Subtask deleted successfully!');
+        return redirect()->route('tasks.index')->with('error', 'Subtask deleted successfully!');
     }
 
     public function updateSubtaskStatus(Request $request, Subtask $subtask)
