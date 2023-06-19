@@ -89,7 +89,9 @@
                                                 </button>
                                             </form>
                                         @endif
-
+                                    </div>
+                                    <div class="ml-auto">
+                                            {{ $comment->created_at->diffForHumans() }}
                                     </div>
                                 </div>
                             </div>

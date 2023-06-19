@@ -326,7 +326,9 @@
                                 @endif
                             </div>
                                 
-                     Reporter:- <b>{{$userList[$task->created_by]}}</b>
+                     <p>Reporter:- <b>{{$userList[$task->created_by]}}</b></p>
+                     <p> Date:- {{date('d-m-Y',strtotime($task->created_at->diffForHumans() ) )}}</p>
+                     
 
                             
                         </div>

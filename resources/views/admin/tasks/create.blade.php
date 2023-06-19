@@ -114,7 +114,18 @@
                                     }
                                 </script>
                             </div>
+                            @if ($errors->any())
+                                <hr/>
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                             
+
                             <div class="border-top">
                                 <div class="card-body">
                                     <button type="submit" class="btn btn-dark">Create Task</button>

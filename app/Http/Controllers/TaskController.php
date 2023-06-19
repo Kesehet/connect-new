@@ -36,7 +36,7 @@ class TaskController extends Controller
         } elseif ($userRole === 'manager') {
             $userIds = $this->getManagerUserIds($userId);
             $tasks = $this->getTasksForManager($userIds);
-            $userList = $this->getUserListForManager($userIds);
+            $userList = $this->getUserListForAdmin();
         } else {
             $tasks = $this->getUserTasks($userId);
         }
@@ -184,7 +184,17 @@ class TaskController extends Controller
         ]);
 
         $userId = Auth::user()->id;
-        
+        if($request->input('subtask_name', []) && $request->input('subtask_assigned_to')){
+            $request->validate([
+                'subtask_name' => 'required',
+                'subtask_assigned_to' => 'required',
+            ]);
+        }
+
+        if(count($request->input('subtask_name', [])) <= 0){
+            return redirect()->back()->withErrors('Please add at least one subtask!');
+        }
+            
 
         $task = Task::create([
             'name' => $request->input('name'),
