@@ -24,8 +24,8 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-12">
-                <div class="card">
+	    <div class="col-md-12">
+		<div class="card shadow-3d">
                     <div class="card-body">
                         <h4 class="card-title">Create New Task</h4>
                         <form action="{{ route('tasks.store') }}" method="POST" class="form-horizontal">
@@ -69,7 +69,20 @@
                                 <div class="col-sm-9 offset-sm-3">
                                     <button type="button" onclick="addSubtask()" class="btn btn-success btn-sm add-subtask"><i class="fas fa-plus"></i> Add Subtask</button>
                                 </div>
-                                <script>
+<style>
+.card.shadow-3d {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateZ(0);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card.shadow-3d:hover {
+    transform: translateZ(10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+</style>
+<script>
+
                                     function addSubtask() {
                                         var subtaskHtml = `
                                         <div class="form-group row">
