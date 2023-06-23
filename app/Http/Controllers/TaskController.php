@@ -34,8 +34,7 @@ class TaskController extends Controller
             $tasks = $this->getTasksForAdmin();
             $userList = $this->getUserListForAdmin();
         } elseif ($userRole === 'manager') {
-            $userIds = $this->getManagerUserIds($userId);
-            $tasks = $this->getTasksForManager($userIds);
+            $tasks = $this->getTasksForManager([$userId]);
             $userList = $this->getUserListForAdmin();
         } else {
             $tasks = $this->getUserTasks($userId);
@@ -111,11 +110,26 @@ class TaskController extends Controller
         return $userIds;
     }
 
-    private function getTasksForManager($userIds)
+    private function getTasksForManager($userId)
     {
-        $tasks = Task::whereIn('user_id', $userIds)->orderBy('created_at', 'DESC')->paginate(20);
-        return $tasks;
+        $returnList = [];
+        $tasks = Task::orderBy('created_at', 'DESC')->get();
+    
+        for ($i = 0; $i < count($tasks); $i++) {
+            // Looping through all the tasks in the database
+            $subtask = $tasks[$i]->subtasks()->where('assigned_to', $userId)
+                ->orWhere('created_by', $userId)
+                ->get();
+            
+            if ($subtask->count() > 0) {
+                array_push($returnList, $tasks[$i]);
+            }
+        }
+        
+        return $returnList;
     }
+    
+
 
     private function getUserListForManager($userIds)
     {
@@ -125,8 +139,6 @@ class TaskController extends Controller
         for ($i=0; $i < count($ids); $i++) { 
             $userList[$ids[$i]] = $userList[$ids[$i]] . ' '. User::where('id', $ids[$i])->value('last_name');
         }
-        
-        
         return $userList;
     }
 
