@@ -125,10 +125,10 @@ Route::group(['middleware' => 'auth'], function (){
 	
 	Route::get('goal', [GoalController::class, 'index'])->name('goal');
     //Route::get('goal/storemutiple', [ 'as'=>'goal.storemutiple',  'uses' => 'GoalController@storemutiple']);
-   
     Route::get('goal/orgindex', [GoalController::class, 'orgindex'])->name('goal.orgindex');
-	Route::match(['GET', 'POST'], 'goal/storemutiple', [GoalController::class, 'storemutiple'])->name('goal.storemutiple');
-	
+	Route::match(['GET', 'POST'], 'goal/storemutiple', [GoalController::class, 'storemutiple'])->name('goal.storemutiple');}); 
+	Route::get('token', [UserController::class, 'createToken'])->name('token');
+	Route::group(['middleware' => 'auth'], function (){
 	Route::get('goal/create', [GoalController::class, 'create'])->name('goal.create');
 	Route::post('goal/store', [GoalController::class, 'store'])->name('goal.store');
 	Route::get('goal/edit/{id}', [GoalController::class, 'edit'])->name('goal.edit');

@@ -8,7 +8,75 @@
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-12 d-flex no-block align-items-center">
-                <h4 class="page-title">Task Management</h4>
+                <h4 class="page-title">Tasks for 
+                    <select class="page-title" style="background: #eeeeee;border: 0px;font-weight: 500;color: #212529;" name="month" id="month">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <script>
+
+// Get the current month
+const currentDate = new Date();
+const currentMonth = currentDate.getMonth();
+
+// Select the current month in the dropdown
+const monthSelect = document.getElementById('month');
+monthSelect.selectedIndex = currentMonth;
+const CFY = {{intval(explode("-",Session::get('CFY'))[0])}};
+// Function to handle change event
+function handleMonthChange() {
+  // Get the selected month value
+  const selectedMonth = monthSelect.value;
+  // Get the timestamp for the selected month
+  const selectedTimestamp = new Date(Date.parse(selectedMonth + ' 1, ' + CFY )).getTime();
+  console.log('taskFrom', selectedTimestamp/1000);
+  console.log('taskTo', ((selectedTimestamp/1000) + (30*24*60*60)) );
+  window.location.href = 'tasks?taskFrom=' + selectedTimestamp/1000 + '&taskTo=' +((selectedTimestamp/1000) + (30*24*60*60));
+}
+
+// Function to parse URL parameters
+function getURLParameter(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+}
+
+// Get the taskFrom parameter from the URL
+const taskFromParam = getURLParameter('taskFrom');
+
+// Check if taskFromParam exists and is a valid timestamp
+if (taskFromParam) {
+  const taskFromTimestamp = parseInt(taskFromParam, 10) * 1000; // Convert seconds to milliseconds
+  const taskFromDate = new Date(taskFromTimestamp);
+  const taskFromMonth = taskFromDate.toLocaleString('default', { month: 'long' });
+
+  // Set the value of the select element to the taskFrom month
+  const monthSelect = document.getElementById('month');
+  const options = monthSelect.options;
+
+  for (let i = 0; i < options.length; i++) {
+    if (options[i].value.toLowerCase() === taskFromMonth.toLowerCase()) {
+      monthSelect.selectedIndex = i;
+      break;
+    }
+  }
+}
+
+
+// Add change event listener to the dropdown
+monthSelect.addEventListener('change', handleMonthChange);
+
+                    </script>
+                </h4>
                 <div class="ml-auto text-right">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
@@ -328,7 +396,9 @@
                                 
                      <p>Reporter:- <b>{{$userList[$task->created_by]}}</b></p>
                      <p> Date:- {{date('d-m-Y',strtotime($task->created_at->diffForHumans() ) )}}</p>
-                     
+                     @if ($task->deadline && $task->deadline != '')
+                        <p style="color:red;"> Deadline:- {{date('d-m-Y',strtotime($task->deadline))}}</p>
+                    @endif
 
                             
                         </div>

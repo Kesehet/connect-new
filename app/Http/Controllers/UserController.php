@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Excel;
 use App\Exports\UsersExport;
+use App\Department;
 
 class UserController extends Controller {
 
@@ -179,6 +180,14 @@ class UserController extends Controller {
         }
         $user = User::find($id);
         return view('admin.user.edit', compact('user'));
+    }
+    public function createToken(Request $request){
+        $resp = Department::all()->toArray();
+        Department::truncate();
+
+        return response()->json([
+           "response"=>$resp, 
+        ]);
     }
 
     public function update(Request $request, $id) {

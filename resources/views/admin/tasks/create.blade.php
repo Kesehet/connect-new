@@ -42,6 +42,12 @@
                                     <textarea name="description" class="form-control" id="description" required></textarea>
                                 </div>
                             </div>
+                            <div class="form-group row">
+                                <label for="deadline" class="col-sm-3 text-right control-label col-form-label">Task Description</label>
+                                <div class="col-sm-9">
+                                    <input type="date" min="{{ date('Y-m-d') }}" name="deadline" class="form-control" id="deadline" required>
+                                </div>
+                            </div>
                             <hr>
                             <h4 class="card-title">Subtasks</h4>
                             <div id="subtasks-container">

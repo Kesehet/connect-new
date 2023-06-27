@@ -40,8 +40,16 @@ class TaskController extends Controller
             $tasks = $this->getUserTasks($userId);
         }
 
+        $taskFrom = $this->getDefaultOrGetValue("taskFrom","0");
+        $taskTo = $this->getDefaultOrGetValue("taskTo","99999999999999999999999999");
         $tasksWithSubtasks = [];
-        foreach ($tasks as $task) {
+        foreach ($tasks as $task) {            
+            $taskWasCreatedAt = strtotime($task->created_at);
+            //if task is created before taskFrom or is created after taskTo
+            if( $taskWasCreatedAt < $taskFrom || $taskWasCreatedAt > $taskTo){
+                continue;
+            }
+            // get all subtasks for task
             $task->subtasks = $this->getSubtasksForTask($task->id);
             // get all Task comments where task id is equal to task id. order by date desc
             $task->comments = TaskComment::where('task_id', $task->id)->orderBy('created_at', 'DESC')->get();
@@ -60,6 +68,11 @@ class TaskController extends Controller
         
         return view('admin.tasks.index', compact('tasks', 'userList'));
     }
+
+    public function getDefaultOrGetValue($key, $default = null){
+        return isset($_GET[$key]) ? $_GET[$key] : $default;
+    }
+
     public function getUserListForEmployee(){
         
         //take auth user id and get that user as userlist array
@@ -133,7 +146,6 @@ class TaskController extends Controller
 
     private function getUserListForManager($userIds)
     {
-        
         $userList = User::whereIn('id', $userIds)->pluck('first_name', 'id')->toArray();
         $ids = array_keys($userList);
         for ($i=0; $i < count($ids); $i++) { 
@@ -213,6 +225,7 @@ class TaskController extends Controller
             'description' => $request->input('description'),
             'user_id' => $userId,
             'created_by' => Auth::id(),
+            'deadline'=> $request->input('deadline'),
         ]);
 
         foreach ($request->input('subtask_name', []) as $index => $subtaskName) {
@@ -247,6 +260,9 @@ class TaskController extends Controller
     
         $task->name = $request->input('name');
         $task->description = $request->input('description');
+        if($request->input('deadline')){
+            $task->deadline = $request->input('deadline');
+        }
         $task->save();
     
         $subtaskIds = $request->input('subtask_id', []);
